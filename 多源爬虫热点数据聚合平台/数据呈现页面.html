@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B站热门视频与百度热搜</title>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-image: url('https://images.unsplash.com/photo-1742435456486-3a0059c05e38?q=80&w=2574&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
+            background-size: cover;
+            background-position: center center;
+            background-attachment: fixed;
+            color: #333;
+        }
+
+        /* 标题样式 */
+        h1 {
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        /* 卡片容器样式 */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* 卡片基础样式 */
+        .card {
+            width: 300px;
+            background: rgba(255, 255, 255, 0.9);
+            margin: 15px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡片悬停效果 */
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 卡片顶部装饰线 */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, #30cfd0, #330867);
+        }
+
+        /* 卡片标题样式 */
+        .card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 18px;
+            line-height: 1.4;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* 卡片内容文本样式 */
+        .card p {
+            margin: 8px 0;
+            color: #555;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* 卡片链接按钮样式 */
+        .card a {
+            display: inline-block;
+            margin-top: 15px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            background: linear-gradient(to right, #30cfd0, #330867);
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        /* 卡片链接悬停效果 */
+        .card a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 错误信息样式 */
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        /* 登录框样式 */
+        #login_box {
+            width: 20%;
+            height: 400px;
+            background-color: #00000060;
+            margin: auto;
+            margin-top: 10%;
+            text-align: center;
+            border-radius: 10px;
+            padding: 50px 50px;
+        }
+
+        /* 登录标题样式 */
+        #login_box h2 {
+            color: #ffffff90;
+            margin-top: 5%;
+        }
+
+        /* 输入框容器样式 */
+        #input_box {
+            margin-top: 5%;
+        }
+
+        /* 登录框文本样式 */
+        #login_box span {
+            color: #fff;
+        }
+
+        /* 输入框样式 */
+        #login_box input {
+            border: 0;
+            width: 60%;
+            font-size: 15px;
+            color: #fff;
+            background: transparent;
+            border-bottom: 2px solid #fff;
+            padding: 5px 10px;
+            outline: none;
+            margin-top: 10px;
+        }
+
+        /* 输入框占位符样式 */
+        #login_box input::-webkit-input-placeholder {
+            color: #ccc;
+        }
+
+        #login_box input::-moz-placeholder {
+            color: #ccc;
+        }
+
+        #login_box input:-ms-input-placeholder {
+            color: #ccc;
+        }
+
+        #login_box input:-moz-placeholder {
+            color: #ccc;
+        }
+
+        /* 登录按钮样式 */
+        #login_box button {
+            margin-top: 50px;
+            width: 60%;
+            height: 30px;
+            border-radius: 10px;
+            border: 0;
+            color: #fff;
+            text-align: center;
+            line-height: 30px;
+            font-size: 15px;
+            background-image: linear-gradient(to right, #30cfd0, #330867);
+        }
+
+        /* 注册链接位置 */
+        #sign_up {
+            margin-top: 45%;
+            margin-left: 60%;
+        }
+
+        /* 注册链接颜色 */
+        #login_box a {
+            color: #b94648;
+        }
+
+        /* 页面按钮样式 */
+        .page-button {
+            margin: 20px;
+            padding: 12px 25px;
+            background: linear-gradient(to right, #30cfd0, #330867);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 页面按钮悬停效果 */
+        .page-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 登出按钮特殊样式 */
+        #logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+        }
+
+        /* 搜索容器样式 */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        /* 搜索输入框样式 */
+        #search-input, #baidu-hot-search-input {
+            width: 50%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px 0 0 30px;
+            font-size: 16px;
+            outline: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 搜索按钮样式 */
+        #search-button, #baidu-hot-search-button {
+            padding: 12px 25px;
+            background: linear-gradient(to right, #30cfd0, #330867);
+            color: white;
+            border: none;
+            border-radius: 0 30px 30px 0;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        /* 搜索按钮悬停效果 */
+        #search-button:hover, #baidu-hot-search-button:hover {
+            background: linear-gradient(to right, #25b7b8, #2a0757);
+        }
+
+        /* 清除搜索按钮样式 */
+        #clear-search, #baidu-hot-clear-search {
+            padding: 12px 20px;
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 15px;
+            transition: all 0.3s ease;
+        }
+
+        /* 清除搜索按钮悬停效果 */
+        #clear-search:hover, #baidu-hot-clear-search:hover {
+            background: linear-gradient(to right, #e63956, #e63a21);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 百度热搜标签栏样式 */
+        .baidu-tabs {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* 单个标签样式 */
+        .baidu-tab {
+            padding: 12px 25px;
+            margin: 0 5px;
+            background: transparent;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #555;
+            transition: all 0.3s ease;
+        }
+
+        /* 激活标签样式 */
+        .baidu-tab.active {
+            background: linear-gradient(to right, #30cfd0, #330867);
+            color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 标签悬停效果 */
+        .baidu-tab:hover:not(.active) {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* 百度内容区域基础样式 */
+        .baidu-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* 激活的内容区域 */
+        .baidu-content.active {
+            display: block;
+        }
+
+        /* 淡入动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 新闻卡片顶部装饰线颜色 */
+        .news-card::before {
+            background: linear-gradient(to right, #3498db, #2980b9);
+        }
+
+        /* 小说卡片顶部装饰线颜色 */
+        .novel-card::before {
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+        }
+
+        /* 电影卡片顶部装饰线颜色 */
+        .movie-card::before {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+
+        /* 排名徽章样式 */
+        .rank-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(to right, #ff8a00, #e52e71);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* 热度指示器样式 */
+        .hot-indicator {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        /* 响应式设计 - 移动设备适配 */
+        @media (max-width: 768px) {
+            /* 卡片在移动设备上全宽 */
+            .card {
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            /* 标签栏换行 */
+            .baidu-tabs {
+                flex-wrap: wrap;
+            }
+
+            /* 标签样式调整 */
+            .baidu-tab {
+                margin: 5px;
+                padding: 8px 15px;
+            }
+
+            /* 搜索容器改为垂直布局 */
+            .search-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            /* 搜索输入框调整 */
+            #search-input, #baidu-hot-search-input {
+                width: 80%;
+                border-radius: 30px;
+                margin-bottom: 10px;
+            }
+
+            /* 搜索按钮调整 */
+            #search-button, #baidu-hot-search-button {
+                width: 80%;
+                border-radius: 30px;
+            }
+
+            /* 清除搜索按钮调整 */
+            #clear-search, #baidu-hot-clear-search {
+                width: 80%;
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+
+        /* 电影封面样式 */
+        .movie-cover {
+            width: 120px;
+            height: 160px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        /* 电影封面悬停效果 */
+        .movie-cover:hover {
+            transform: scale(1.05);
+        }
+
+        /* 电影内容区域 */
+        .movie-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* 电影信息行样式 */
+        .movie-info-row {
+            display: flex;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        /* 电影信息标签样式 */
+        .movie-info-label {
+            flex: 0 0 60px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* 电影信息值样式 */
+        .movie-info-value {
+            flex: 1;
+            color: #333;
+        }
+
+        /* 电影描述文本样式 */
+        .movie-description {
+            margin-top: 10px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 登录页面 -->
+    <div id="login_box">
+        <h1 style="color: #ffffff90; margin-bottom: 10px;">网络热点数据聚合平台</h1>
+        <h2>LOGIN</h2>
+        <div id="input_box">
+            <input type="text" id="username" placeholder="请输入用户名">
+        </div>
+        <div class="input_box">
+            <input type="password" id="password" placeholder="请输入密码">
+        </div>
+        <button onclick="login()">登录</button>
+        <p id="login-error" class="error" style="display: none;">用户名或密码错误</p>
+    </div>
+
+    <!-- B站热门视频页面 -->
+    <div id="video-page" style="display: none;">
+        <h1>Bilibili 热门视频</h1>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="搜索视频标题或UP主...">
+            <button id="search-button" onclick="searchContent('video')">搜索</button>
+            <button id="clear-search" onclick="clearSearch('video')">清除</button>
+        </div>
+        <div class="container" id="video-container"></div>
+        <div class="error" id="video-error-message"></div>
+        <div style="text-align: center;">
+            <button class="page-button" onclick="showBaiduHot()">查看百度热搜</button>
+            <button class="page-button" id="logout-button" onclick="logout()">登出</button>
+        </div>
+    </div>
+
+    <!-- 百度热搜页面 -->
+    <div id="baidu-hot-page" style="display: none;">
+        <h1>百度热搜</h1>
+        <div class="search-container">
+            <input type="text" id="baidu-hot-search-input" placeholder="搜索百度热搜标题...">
+            <button id="baidu-hot-search-button" onclick="searchBaiduContent()">搜索</button>
+            <button id="baidu-hot-clear-search" onclick="clearBaiduSearch()">清除</button>
+        </div>
+
+        <!-- 百度热搜分类标签 -->
+        <div class="baidu-tabs">
+            <div class="baidu-tab active" onclick="switchBaiduTab('news')">新闻热点</div>
+            <div class="baidu-tab" onclick="switchBaiduTab('novel')">热门小说</div>
+            <div class="baidu-tab" onclick="switchBaiduTab('movie')">影视推荐</div>
+        </div>
+
+        <!-- 新闻内容区域 -->
+        <div id="baidu-hot-news" class="baidu-content active">
+            <div class="container" id="baidu-hot-news-container"></div>
+            <div class="error" id="baidu-hot-news-error-message"></div>
+        </div>
+
+        <!-- 小说内容区域 -->
+        <div id="baidu-hot-novel" class="baidu-content">
+            <div class="container" id="baidu-hot-novel-container"></div>
+            <div class="error" id="baidu-hot-novel-error-message"></div>
+        </div>
+
+        <!-- 电影内容区域 -->
+        <div id="baidu-hot-movie" class="baidu-content">
+            <div class="container" id="baidu-hot-movie-container"></div>
+            <div class="error" id="baidu-hot-movie-error-message"></div>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="page-button" onclick="showVideoPage()">查看B站热门视频</button>
+            <button class="page-button" id="logout-button" onclick="logout()">登出</button>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量存储数据
+        let videoData = [];          // 存储B站视频数据
+        let baiduHotNewsData = [];   // 存储百度热搜新闻数据
+        let baiduHotNovelData = [];  // 存储百度热搜小说数据
+        let baiduHotMovieData = []; // 存储百度热搜电影数据
+        let currentBaiduTab = 'news'; // 当前选中的百度标签
+
+        // 登录函数
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginError = document.getElementById('login-error');
+            const loginContainer = document.getElementById('login_box');
+            const videoPage = document.getElementById('video-page');
+
+            // 简单验证用户名和密码
+            if (username === 'admin' && password === 'password') {
+                loginContainer.style.display = 'none';
+                videoPage.style.display = 'block';
+                // 加载B站热门视频数据
+                loadCSV('bilibili_hot.csv', 'video-container', parseVideoCSV, 'video-error-message');
+            } else {
+                loginError.style.display = 'block';
+            }
+        }
+
+        // 加载CSV文件函数
+        function loadCSV(fileName, containerId, parseFunction, errorId) {
+            fetch(fileName)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('无法获取文件');
+                    }
+                    return response.text();
+                })
+                .then(data => parseFunction(data, containerId))
+                .catch(error => showError(error.message, errorId));
+        }
+
+        // 解析B站视频CSV数据
+        function parseVideoCSV(data, containerId) {
+            const rows = data.split('\n').slice(1); // 跳过标题行
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            videoData = [];
+
+            // 处理每一行数据
+            rows.forEach(row => {
+                if (row.trim()) {
+                    const cols = parseCSVRow(row);
+                    if (cols.length >= 6) {
+                        videoData.push(cols);
+                        const card = createVideoCard(cols);
+                        container.appendChild(card);
+                    }
+                }
+            });
+        }
+
+        // 解析百度热搜新闻CSV数据
+        function parseBaiduHotNewsCSV(data, containerId) {
+            const rows = data.split('\n').slice(1);
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            baiduHotNewsData = [];
+
+            rows.forEach((row, index) => {
+                if (row.trim()) {
+                    const cols = parseCSVRow(row);
+                    if (cols.length >= 4) {
+                        baiduHotNewsData.push(cols);
+                        const card = createBaiduNewsCard(cols, index + 1);
+                        container.appendChild(card);
+                    }
+                }
+            });
+        }
+
+        // 解析百度热搜小说CSV数据
+        function parseBaiduHotNovelCSV(data, containerId) {
+            const rows = data.split('\n').slice(1);
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            baiduHotNovelData = [];
+
+            rows.forEach((row, index) => {
+                if (row.trim()) {
+                    const cols = parseCSVRow(row);
+                    if (cols.length >= 5) {  // 现在有5列数据：排名,标题,链接,热度,封面链接
+                        baiduHotNovelData.push(cols);
+                        const card = createBaiduNovelCard(cols, index + 1);
+                        container.appendChild(card);
+                    }
+                }
+            });
+        }
+
+        // 解析百度热搜电影CSV数据
+        function parseBaiduHotMovieCSV(data, containerId) {
+            const rows = data.split('\n').slice(1);
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            baiduHotMovieData = [];
+
+            rows.forEach((row, index) => {
+                if (row.trim()) {
+                    const cols = parseCSVRow(row);
+                    if (cols.length >= 8) {  // 现在有8列数据：排名,标题,链接,热度,电影类型,演员,描述,封面链接
+                        baiduHotMovieData.push(cols);
+                        const card = createBaiduMovieCard(cols, index + 1);
+                        container.appendChild(card);
+                    }
+                }
+            });
+        }
+
+        // 解析CSV行数据函数
+        function parseCSVRow(row) {
+            const regex = /(?:,|\n|^)("(?:(?:"")*[^"]*)*"|[^",\n]*|(?:\n|$))/g;
+            const cols = [];
+            let match;
+            while ((match = regex.exec(row)) !== null) {
+                let value = match[1].replace(/^"|"$/g, '').replace(/""/g, '"');
+                cols.push(value);
+            }
+            return cols;
+        }
+
+        // 创建B站视频卡片函数
+        function createVideoCard(cols) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <h3>${cols[0]}</h3>
+                <p><strong>UP:</strong> ${cols[3]}</p>
+                <p><strong>播放量:</strong> ${cols[4]}</p>
+                <p><strong>弹幕:</strong> ${cols[5]}</p>
+                <a href="${cols[1]}" target="_blank">观看视频</a>
+            `;
+            return card;
+        }
+
+        // 创建百度新闻卡片函数
+        function createBaiduNewsCard(cols, index) {
+            const card = document.createElement('div');
+            card.className = 'card news-card';
+            card.innerHTML = `
+                <div class="rank-badge">${index}</div>
+                <h3>${cols[1]}</h3>
+                <p><strong>热度:</strong> ${cols[3]} <span class="hot-indicator">热</span></p>
+                <a href="${cols[2]}" target="_blank">查看详情</a>
+            `;
+            return card;
+        }
+
+        // 创建百度小说卡片函数
+        function createBaiduNovelCard(cols, index) {
+            const card = document.createElement('div');
+            card.className = 'card novel-card';
+            card.innerHTML = `
+                <div class="rank-badge">${index}</div>
+                <div style="display: flex; margin-bottom: 15px;">
+                    <div style="flex: 0 0 100px; margin-right: 15px;">
+                        <img src="${cols[4]}" alt="${cols[1]}" style="width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    </div>
+                    <div style="flex: 1;">
+                        <h3>${cols[1]}</h3>
+                        <p><strong>热度:</strong> ${cols[3]} <span class="hot-indicator">热</span></p>
+                        <a href="${cols[2]}" target="_blank">在线阅读</a>
+                    </div>
+                </div>
+                <div style="clear: both;"></div>
+            `;
+            return card;
+        }
+
+        // 创建百度电影卡片函数
+        function createBaiduMovieCard(cols, index) {
+            const card = document.createElement('div');
+            card.className = 'card movie-card';
+            card.innerHTML = `
+                <div class="rank-badge">${index}</div>
+                <div style="display: flex; margin-bottom: 10px;">
+                    <img src="${cols[7]}" alt="${cols[1]}" class="movie-cover" onerror="this.src='https://via.placeholder.com/120x160?text=无封面'">
+                    <div class="movie-content">
+                        <h3 style="margin-top: 0; margin-bottom: 10px;">${cols[1]}</h3>
+                        <div class="movie-info-row">
+                            <span class="movie-info-label">热度:</span>
+                            <span class="movie-info-value">${cols[3]} <span class="hot-indicator">热</span></span>
+                        </div>
+                        <div class="movie-info-row">
+                            <span class="movie-info-label">类型:</span>
+                            <span class="movie-info-value">${cols[4]}</span>
+                        </div>
+                        <div class="movie-info-row">
+                            <span class="movie-info-label">主演:</span>
+                            <span class="movie-info-value">${cols[5]}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="movie-description" title="${cols[6]}">
+                    ${cols[6].length > 100 ? cols[6].substring(0, 100) + '...' : cols[6]}
+                </div>
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="${cols[2]}" target="_blank" style="display: inline-block; width: 100%; max-width: 200px;">查看详情</a>
+                </div>
+            `;
+            return card;
+        }
+
+        // 显示错误信息函数
+        function showError(message, errorId) {
+            const errorMessage = document.getElementById(errorId);
+            errorMessage.textContent = `发生错误: ${message}`;
+        }
+
+        // 显示百度热搜页面函数
+        function showBaiduHot() {
+            document.getElementById('video-page').style.display = 'none';
+            document.getElementById('baidu-hot-page').style.display = 'block';
+
+            // 加载三个CSV文件
+            loadCSV('baidu_hot_news.csv', 'baidu-hot-news-container', parseBaiduHotNewsCSV, 'baidu-hot-news-error-message');
+            loadCSV('baidu_hot_novel.csv', 'baidu-hot-novel-container', parseBaiduHotNovelCSV, 'baidu-hot-novel-error-message');
+            loadCSV('baidu_hot_movie.csv', 'baidu-hot-movie-container', parseBaiduHotMovieCSV, 'baidu-hot-movie-error-message');
+        }
+
+        // 显示B站视频页面函数
+        function showVideoPage() {
+            document.getElementById('baidu-hot-page').style.display = 'none';
+            document.getElementById('video-page').style.display = 'block';
+        }
+
+        // 登出函数
+        function logout() {
+            const loginContainer = document.getElementById('login_box');
+            const videoPage = document.getElementById('video-page');
+            const baiduHotPage = document.getElementById('baidu-hot-page');
+
+            loginContainer.style.display = 'block';
+            videoPage.style.display = 'none';
+            baiduHotPage.style.display = 'none';
+
+            // 清空输入字段
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+
+            // 隐藏错误信息
+            document.getElementById('login-error').style.display = 'none';
+            document.getElementById('video-error-message').textContent = '';
+            document.getElementById('baidu-hot-news-error-message').textContent = '';
+            document.getElementById('baidu-hot-novel-error-message').textContent = '';
+            document.getElementById('baidu-hot-movie-error-message').textContent = '';
+        }
+
+        // 搜索内容函数
+        function searchContent(type) {
+            const searchInput = type === 'video'
+                ? document.getElementById('search-input').value.toLowerCase()
+                : document.getElementById('baidu-hot-search-input').value.toLowerCase();
+
+            const containerId = type === 'video' ? 'video-container' : 'baidu-hot-container';
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            const data = type === 'video' ? videoData : baiduHotData;
+
+            // 过滤匹配的数据
+            data.forEach(cols => {
+                const searchText = type === 'video'
+                    ? (cols[0] + cols[3]).toLowerCase()
+                    : cols[1].toLowerCase();
+
+                if (searchText.includes(searchInput)) {
+                    const card = type === 'video' ? createVideoCard(cols) : createBaiduNewsCard(cols);
+                    container.appendChild(card);
+                }
+            });
+
+            // 如果没有结果，显示提示
+            if (container.children.length === 0) {
+                const noResults = document.createElement('p');
+                noResults.textContent = '没有找到匹配的结果';
+                noResults.style.textAlign = 'center';
+                noResults.style.width = '100%';
+                container.appendChild(noResults);
+            }
+        }
+
+        // 搜索百度内容函数
+        function searchBaiduContent() {
+            const searchInput = document.getElementById('baidu-hot-search-input').value.toLowerCase();
+
+            // 搜索新闻
+            const newsContainer = document.getElementById('baidu-hot-news-container');
+            newsContainer.innerHTML = '';
+            baiduHotNewsData.forEach((cols, index) => {
+                if (cols[1].toLowerCase().includes(searchInput)) {
+                    const card = createBaiduNewsCard(cols, index + 1);
+                    newsContainer.appendChild(card);
+                }
+            });
+
+            // 搜索小说
+            const novelContainer = document.getElementById('baidu-hot-novel-container');
+            novelContainer.innerHTML = '';
+            baiduHotNovelData.forEach((cols, index) => {
+                if (cols[1].toLowerCase().includes(searchInput)) {
+                    const card = createBaiduNovelCard(cols, index + 1);
+                    novelContainer.appendChild(card);
+                }
+            });
+
+            // 搜索电影
+            const movieContainer = document.getElementById('baidu-hot-movie-container');
+            movieContainer.innerHTML = '';
+            baiduHotMovieData.forEach((cols, index) => {
+                if (cols[1].toLowerCase().includes(searchInput)) {
+                    const card = createBaiduMovieCard(cols, index + 1);
+                    movieContainer.appendChild(card);
+                }
+            });
+        }
+
+        // 清除搜索函数
+        function clearSearch(type) {
+            const containerId = type === 'video' ? 'video-container' : 'baidu-hot-container';
+            const container = document.getElementById(containerId);
+            const searchInput = type === 'video'
+                ? document.getElementById('search-input')
+                : document.getElementById('baidu-hot-search-input');
+
+            searchInput.value = '';
+            container.innerHTML = '';
+
+            const data = type === 'video' ? videoData : baiduHotData;
+            // 重新渲染所有数据
+            data.forEach(cols => {
+                const card = type === 'video' ? createVideoCard(cols) : createBaiduNewsCard(cols);
+                container.appendChild(card);
+            });
+        }
+
+        // 清除百度搜索函数
+        function clearBaiduSearch() {
+            document.getElementById('baidu-hot-search-input').value = '';
+
+            // 重新渲染新闻数据
+            if (baiduHotNewsData.length > 0) {
+                const newsContainer = document.getElementById('baidu-hot-news-container');
+                newsContainer.innerHTML = '';
+                baiduHotNewsData.forEach((cols, index) => {
+                    const card = createBaiduNewsCard(cols, index + 1);
+                    newsContainer.appendChild(card);
+                });
+            }
+
+            // 重新渲染小说数据
+            if (baiduHotNovelData.length > 0) {
+                const novelContainer = document.getElementById('baidu-hot-novel-container');
+                novelContainer.innerHTML = '';
+                baiduHotNovelData.forEach((cols, index) => {
+                    const card = createBaiduNovelCard(cols, index + 1);
+                    novelContainer.appendChild(card);
+                });
+            }
+
+            // 重新渲染电影数据
+            if (baiduHotMovieData.length > 0) {
+                const movieContainer = document.getElementById('baidu-hot-movie-container');
+                movieContainer.innerHTML = '';
+                baiduHotMovieData.forEach((cols, index) => {
+                    const card = createBaiduMovieCard(cols, index + 1);
+                    movieContainer.appendChild(card);
+                });
+            }
+        }
+
+        // 切换百度标签函数
+        function switchBaiduTab(tabName) {
+            currentBaiduTab = tabName;
+
+            // 更新标签样式
+            document.querySelectorAll('.baidu-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.baidu-tab[onclick="switchBaiduTab('${tabName}')"]`).classList.add('active');
+
+            // 更新内容区域显示
+            document.querySelectorAll('.baidu-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`baidu-hot-${tabName}`).classList.add('active');
+        }
+    </script>
+</body>
+
+</html>
